@@ -20,7 +20,9 @@ def join(seq):
 def product(s):
     return reduce(operator.mul, s)
 
-class Pos(namedtuple('Pos', ' x y')):
+class Pos(namedtuple('Pos', 'x y')):
+    x: int
+    y: int
     def __add__(self, o: 'Pos'):
         return Pos(self.x + o.x, self.y + o.y)
 
@@ -35,6 +37,22 @@ class Pos(namedtuple('Pos', ' x y')):
 
     def sign(self):
         return Pos(sign(self.x), sign(self.y))
+
+    def __bool__(self):
+        return bool(self.x or self.y)
+
+    def draw(self, target):
+        cur = self
+        while 1:
+            yield cur
+            if not (diff := target - cur):
+                break
+            cur += diff.sign()
+
+    @classmethod
+    def from_str(cls, s):
+        return cls(*map(int, s.split(',')))
+
 
 
 def sign(x):
@@ -121,6 +139,12 @@ class Board:
     def col(self, x):
         return [self[x, y] for y in self.itery()]
 
+    def draw(self, start: Pos, end: Pos, char='#'):
+        diff = start-end
+        assert diff.x == 0 or diff.y == 0
+        for x in start.draw(end):
+            self[x] = char
+
 
     def iterrc(self):
         for y in self.itery():
@@ -138,6 +162,8 @@ class Board:
 
     def __getitem__(self, k):
         return self.d[k]
+    def __contains__(self, item):
+        return item in self.d
 
     def positions(self):
         return self.d.keys()
@@ -154,9 +180,18 @@ class Board:
         for y in range(self.maxy+1):
             yield y, [self.d[x,y] for x in range(self.maxx + 1)]
 
+    def fill_empty(self, char='.'):
+        for x in self.iterx():
+            for y in self.iterx():
+                try:
+                    self[x,y]
+                except KeyError:
+                    self[x,y] = char
+
     def dump(self):
         for _, row in self.iter_rows():
             print (''.join(row))
+
 
 
 def shorted_distances(positions, start, neighbours):
@@ -175,8 +210,8 @@ def shorted_distances(positions, start, neighbours):
 
 class Range(namedtuple('Range', 'start end')):
     @classmethod
-    def from_str(cls, s):
-        return cls(*map(int, s.split('-')))
+    def from_str(cls, s, delim='-'):
+        return cls(*map(int, s.split(delim)))
 
     def __and__(self, o: 'Range'):
         return self.start <= o.end and o.start <= self.end
