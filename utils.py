@@ -53,6 +53,19 @@ class Pos(namedtuple('Pos', 'x y')):
     def from_str(cls, s):
         return cls(*map(int, s.split(',')))
 
+    def md(self):
+        return abs(self.x) + abs(self.y)
+
+    def overlap_yline(self, md: int, y: int):
+        # distance to the line
+        d = (self - Pos(self.x, y)).md()
+        if d > md:
+            return None
+        return Range(self.x - md + d, self.x + md -d)
+
+
+
+
 
 
 def sign(x):
@@ -209,6 +222,7 @@ def shorted_distances(positions, start, neighbours):
 
 
 class Range(namedtuple('Range', 'start end')):
+    "*inclusive* of end"
     @classmethod
     def from_str(cls, s, delim='-'):
         return cls(*map(int, s.split(delim)))
@@ -218,3 +232,10 @@ class Range(namedtuple('Range', 'start end')):
 
     def within(self, o: 'Range'):
         return self.start >= o.start and self.end <= o.end
+
+    def __contains__(self, x):
+        return x >= self.start and x <= self.end
+
+    @property
+    def length(self):
+        return self.end - self.start + 1
