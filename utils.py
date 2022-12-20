@@ -1,5 +1,6 @@
 import itertools
 import operator
+import sys
 from collections import namedtuple
 from functools import reduce
 
@@ -127,12 +128,17 @@ diff = [(0, 1), (0, -1), (1, 0), (-1, 0)]
 class Board:
     def __init__(self):
         self.d = {} # x,y -> height; y grows
-        self.maxx = self.maxy = -1
+        self.maxx = self.maxy = -sys.maxsize
+        self.minx = self.miny = sys.maxsize
 
     def __setitem__(self, k, v):
         self.d[k] = v
+
         self.maxx = max(self.maxx, k[0])
         self.maxy = max(self.maxy, k[1])
+
+        self.minx = min(self.minx, k[0])
+        self.miny = min(self.miny, k[1])
 
     def find_first(self, wanted):
         return next(self.find_all(wanted))
@@ -142,10 +148,16 @@ class Board:
                 yield k
 
     def itery(self):
-        for y in range(self.maxy+1): yield y
+        for y in range(self.miny, self.maxy+1): yield y
 
     def iterx(self):
-        for x in range(self.maxx+1): yield x
+        for x in range(self.minx, self.maxx+1): yield x
+
+    def collides(self, other: 'Board'):
+        return set(self.d) & set(other.d)
+
+    def collides_set(self, n):
+        return set(self.d) & n
 
     def row(self, y):
         return [self[x, y] for x in self.iterx()]
@@ -181,6 +193,9 @@ class Board:
     def positions(self):
         return self.d.keys()
 
+    def __str__(self):
+        return f'<Board {self.minx},{self.miny}..{self.maxx},{self.maxy}>'
+
     @classmethod
     def from_rows(cls, seq, fun=identity):
         self = cls()
@@ -189,9 +204,44 @@ class Board:
                 self[x,y] = fun(item)
         return self
 
-    def iter_rows(self):
-        for y in range(self.maxy+1):
-            yield y, [self.d[x,y] for x in range(self.maxx + 1)]
+    @classmethod
+    def from_items(cls, seq):
+        self = cls()
+        for k,v in seq:
+            self[k] = v
+        return self
+
+    def copy(self):
+        return Board.from_items(self.d.items())
+
+    def flipy(self):
+        return Board.from_items(
+            ((x, self.maxy-y), item)
+            for (x,y), item in self.d.items()
+        )
+
+    @classmethod
+    def from_str(cls, s, full='#'):
+        return cls.from_items(
+            ((xi, yi), x)
+            for yi, ys in enumerate(s)
+            for xi, x in enumerate(ys)
+            if x == full
+        )
+
+    def translate(self, dx, dy):
+        return self.from_items(
+            ((x+dx, y+dy), v)
+            for (x,y), v in self.d.items()
+        )
+
+    def merge(self, b: 'Board', rep=None):
+        for k,v in b.d.items():
+            self[k] = rep or v
+
+    def iter_rows(self, default=' '):
+        for y in self.itery():
+            yield y, [self.d.get((x,y), default) for x in self.iterx()]
 
     def fill_empty(self, char='.'):
         for x in self.iterx():
@@ -201,8 +251,8 @@ class Board:
                 except KeyError:
                     self[x,y] = char
 
-    def dump(self):
-        for _, row in self.iter_rows():
+    def dump(self, default=' '):
+        for _, row in self.iter_rows(default):
             print (''.join(row))
 
 

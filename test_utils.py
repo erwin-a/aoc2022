@@ -29,3 +29,17 @@ def test_Board():
     b.dump()
 
     assert sum(1 for _ in b.find_all('#')) == 6
+
+    b = Board.from_str(["###", ".#"])
+    assert b.miny == b.minx == 0
+    assert b.maxx == 2
+    assert sum (1 for _ in b.find_all('#')) == 4
+    assert b[1,0] == '#'
+
+    b2 = b.translate(dx=1, dy=0)
+    assert b2.minx == 1
+    assert b2.maxx == 3
+    assert b.collides(b2)
+    b3 = b.translate(dx=5, dy=0)
+    assert not b.collides(b3)
+
