@@ -1,4 +1,3 @@
-import itertools
 import operator
 import sys
 from collections import namedtuple
@@ -6,11 +5,12 @@ from functools import reduce
 from typing import Self
 
 
+
 def replace_nth(t: tuple, n: int, val):
     "Replace nth in the tuple with val"
-    t = list(t)
-    t[n] = val
-    return tuple(t)
+    l = list(t)
+    l[n] = val
+    return tuple(l)
 
 
 def join(seq):
@@ -25,7 +25,8 @@ def product(s):
 class Pos(namedtuple('Pos', 'x y')):
     x: int
     y: int
-    def __add__(self, o: 'Pos'):
+
+    def __add__(self, o: 'Pos'):  # type: ignore
         return Pos(self.x + o.x, self.y + o.y)
 
     def __sub__(self, o: 'Pos'):
@@ -297,7 +298,7 @@ class Pos3(namedtuple('Pos', 'x y z')):
     y: int
     z: int
 
-    def __add__(self, o: Self):
+    def __add__(self, o: 'Pos3'):  # type: ignore
         return Pos3(self.x + o.x, self.y + o.y, self.z + o.z)
     def div (self, n):
         return Pos3(self.x/n, self.y/n, self.z/n)
