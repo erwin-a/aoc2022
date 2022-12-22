@@ -3,6 +3,7 @@ import operator
 import sys
 from collections import namedtuple
 from functools import reduce
+from typing import Self
 
 
 def replace_nth(t: tuple, n: int, val):
@@ -118,9 +119,9 @@ identity = lambda x:x
 def lines(f):
     for line in open("inputs/%s.txt" % f):
         yield line.rstrip()
-def tokens(f):
+def tokens(f, d=None):
     for line in lines(f):
-        yield line.split()
+        yield line.split(d)
 
 
 diff = [(0, 1), (0, -1), (1, 0), (-1, 0)]
@@ -289,3 +290,67 @@ class Range(namedtuple('Range', 'start end')):
     @property
     def length(self):
         return self.end - self.start + 1
+
+
+class Pos3(namedtuple('Pos', 'x y z')):
+    x: int
+    y: int
+    z: int
+
+    def __add__(self, o: Self):
+        return Pos3(self.x + o.x, self.y + o.y, self.z + o.z)
+    def div (self, n):
+        return Pos3(self.x/n, self.y/n, self.z/n)
+
+    @classmethod
+    def unit(cls, n):
+        return cls(n,n,n)
+
+    def neighbours(self):
+        for x in diff3:
+            yield self+x
+
+    @classmethod
+    def from_str(cls, s):
+        return cls(*(int(z) for z in s.split(',')))
+
+    @classmethod
+    def plane(cls, bot, top, x=None, y=None, z=None):
+        zrange = range(bot.z, top.z+1) if z is None else [z]
+        xrange = range(bot.x, top.x+1) if x is None else [x]
+        yrange = range(bot.y, top.y+1) if y is None else [y]
+        for x in xrange:
+            for y in yrange:
+                for z in zrange:
+                    yield cls(x,y,z)
+
+diff3 = [Pos3(*_) for _ in [
+    (0, 1, 0),
+    (0, -1, 0),
+    (1, 0, 0),
+    (-1, 0, 0),
+    (0, 0, +1),
+    (0, 0, -1)
+]]
+
+
+def bounding_cube(cubes, S=1):
+    # really bounding one outside of the max dimension
+    min_x, max_x = min(c.x for c in cubes), max(c.x for c in cubes)
+    min_y, max_y = min(c.y for c in cubes), max(c.y for c in cubes)
+    min_z, max_z = min(c.z for c in cubes), max(c.z for c in cubes)
+
+    return Pos3(min_x - S, min_y - S, min_z - S), Pos3(max_x + S, max_y + S, max_z + S)
+
+
+def fill_outside(cubes: set[Pos3], S=1):
+    s = set()
+    bot, top = bounding_cube(cubes, S=S)
+    print (bot, top)
+    for z in [top.z, bot.z]:
+        s.update(Pos3.plane(bot, top, z=z))
+    for y in [top.y, bot.y]:
+        s.update(Pos3.plane(bot, top, y=y))
+    for x in [top.x, bot.x]:
+        s.update(Pos3.plane(bot, top, x=x))
+    return s
