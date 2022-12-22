@@ -61,4 +61,4 @@ def test_Pos3():
     assert len(set(Pos3.plane(Pos3(0, 0, 0), Pos3(2, 2, 2), x=3))) == 9
 
     assert len(fill_outside({Pos3(1,1,1)})) == 26
-    assert len(fill_outside({Pos3(1,1,1)}, S=2)) == 5*5 + 5*5 + 3*5 + 3*5 +3*3 + 3*3
+    assert len(fill_outside({Pos3(1,1,1)}, gap=2)) == 5 * 5 + 5 * 5 + 3 * 5 + 3 * 5 + 3 * 3 + 3 * 3

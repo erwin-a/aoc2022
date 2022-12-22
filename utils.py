@@ -334,19 +334,18 @@ diff3 = [Pos3(*_) for _ in [
 ]]
 
 
-def bounding_cube(cubes, S=1):
-    # really bounding one outside of the max dimension
+def bounding_cube(cubes, gap=1):
+    "leave #gap space on the outside"
     min_x, max_x = min(c.x for c in cubes), max(c.x for c in cubes)
     min_y, max_y = min(c.y for c in cubes), max(c.y for c in cubes)
     min_z, max_z = min(c.z for c in cubes), max(c.z for c in cubes)
 
-    return Pos3(min_x - S, min_y - S, min_z - S), Pos3(max_x + S, max_y + S, max_z + S)
+    return Pos3(min_x - gap, min_y - gap, min_z - gap), Pos3(max_x + gap, max_y + gap, max_z + gap)
 
 
-def fill_outside(cubes: set[Pos3], S=1):
+def fill_outside(cubes: set[Pos3], gap=1):
     s = set()
-    bot, top = bounding_cube(cubes, S=S)
-    print (bot, top)
+    bot, top = bounding_cube(cubes, gap=gap)
     for z in [top.z, bot.z]:
         s.update(Pos3.plane(bot, top, z=z))
     for y in [top.y, bot.y]:
